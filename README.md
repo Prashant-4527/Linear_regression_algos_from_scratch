@@ -57,9 +57,9 @@ The implementation adds a column of ones to `X` so that the first learned coeffi
 
 ### 3. Gradient descent
 
-`gdregressor.py` contains the starting structure for a gradient-descent regressor. Gradient descent repeatedly updates the parameters in the direction that reduces the loss instead of solving the normal equation directly.
+`gdregressor.py` implements a gradient-descent regressor for linear regression. Gradient descent repeatedly updates the parameters in the direction that reduces the loss, providing an iterative alternative to solving the normal equation directly.
 
-This file is currently a work in progress and is not yet runnable. It is kept as the next implementation step for studying iterative optimization.
+This implementation uses batch gradient descent, computing gradients over the entire dataset at each epoch and updating coefficients with a configurable learning rate.
 
 ## Project structure
 
@@ -84,13 +84,38 @@ Install the dependencies with:
 pip install numpy pandas scikit-learn
 ```
 
-## Run the simple regression demo
+## Running the demos
+
+### Simple linear regression demo
 
 ```bash
 python simple_linear_regression.py
 ```
 
-The regression class itself does not use `sklearn.linear_model`. The only scikit-learn feature in the demo is the train/test split.
+### Multiple linear regression demo
+
+```bash from scikit-learn:
+
+```python
+import numpy as np
+from simple_linear_regression import SimpleLinearRegression
+
+# Create and train the model
+model = SimpleLinearRegression()
+model.fit(X_train, y_train)
+
+# Make predictions
+predictions = model.predict(X_test)
+```
+
+All three implementations follow this consistent API, making it easy to swap between algorithms.
+### Gradient descent regression demo
+
+```bash
+python gdregressor.py
+```
+
+**Note:** The regression classes themselves do not use `sklearn.linear_model`. Scikit-learn is only used in the demos for the `train_test_split` utility function.
 
 ## Example workflow
 

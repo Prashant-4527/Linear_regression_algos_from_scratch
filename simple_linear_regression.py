@@ -19,7 +19,7 @@ class SimpleLinearRegression:
         self.b = y_train.mean() - (self.m * X_train.mean())
         print(self.m)
         print(self.b)
-
+    
 
     def predict(self, X_test):
         print(X_test)

@@ -1,87 +1,137 @@
-# Simple Linear Regression — From Scratch
+# Linear Regression From Scratch
 
-A from-scratch implementation of **Ordinary Least Squares (OLS) simple linear regression** in Python — no `sklearn.linear_model`, no shortcuts. Built to understand the math behind the model before relying on library abstractions.
+This folder contains first-principles implementations of linear regression in Python. The goal is to understand how a regression model learns its coefficients before using a library such as `sklearn.linear_model.LinearRegression`.
 
-## Overview
+The project covers:
 
-This project implements the closed-form OLS solution for fitting a line `y = mx + b` to data, using only the covariance/variance formula:
+- Simple linear regression with one feature
+- Multiple linear regression with several features
+- Gradient descent as an alternative optimization method
 
-```
-m = Σ((xᵢ - x̄)(yᵢ - ȳ)) / Σ((xᵢ - x̄)²)
-b = ȳ - m·x̄
-```
+## What is linear regression?
 
-The model is validated on a synthetic dataset — **CGPA vs. Placement Package (LPA)** — where the true underlying relationship is known in advance, allowing direct verification that the fitted parameters recover the true signal despite added noise.
+Linear regression predicts a continuous target by learning a weighted sum of its input features.
 
-## Why build this from scratch?
+For one feature:
 
-Libraries like `scikit-learn` hide the mechanics of linear regression behind a `.fit()` call. Implementing OLS manually forces an understanding of:
-
-- How the slope and intercept are derived from covariance and variance
-- Why the least-squares solution minimizes squared error
-- What assumptions (linearity, homoscedasticity) the model relies on
-
-This is a first-principles building block before moving to regularized models (Ridge, Lasso) and more complex regressors used later in the portfolio.
-
-## Dataset
-
-The dataset is **synthetically generated**, not hand-typed, to guarantee correctness and reproducibility:
-
-```python
-np.random.seed(42)
-m_true, b_true = 2.5, -10
-
-CGPA = np.linspace(5, 10, 50)                  # 50 evenly spaced CGPA values
-noise = np.random.normal(0, 0.5, 50)            # Gaussian noise, σ = 0.5
-Package_LPA = m_true * CGPA + b_true + noise    # true linear relationship + noise
+```text
+y_hat = m x + b
 ```
 
-- **50 samples**, CGPA range 5.0–10.0
-- True relationship: `Package_LPA = 2.5 × CGPA − 10`
-- Gaussian noise (σ = 0.5) added to simulate real-world variance — a perfectly clean line would validate the code but not the model's robustness to noise
+For multiple features:
 
-## Results
-
-| Metric | Value |
-|---|---|
-| Recovered slope (m) | 2.4173 (true: 2.5) |
-| Recovered intercept (b) | -9.4703 (true: -10) |
-| R² Score | 0.9785 |
-| RMSE | 0.4486 LPA |
-| MAE | 0.3611 LPA |
-
-The model recovers parameters close to the true `m` and `b` used to generate the data, confirming the OLS implementation is mathematically correct. The gap between recovered and true values is expected — it reflects the injected noise and finite sample size (50 points), not an error in the formula.
-
-## Project Structure
-
+```text
+y_hat = b + w1 x1 + w2 x2 + ... + wn xn
 ```
+
+The model chooses the weights that minimize the mean squared error (MSE):
+
+```text
+MSE = (1 / n) sum((y - y_hat)^2)
+```
+
+This is called the least-squares objective because large prediction errors receive a larger penalty after squaring.
+
+## Algorithms implemented
+
+### 1. Simple linear regression
+
+`simple_linear_regression.py` fits a line using the closed-form ordinary least squares equations:
+
+```text
+m = sum((x - x_mean)(y - y_mean)) / sum((x - x_mean)^2)
+b = y_mean - m x_mean
+```
+
+The script creates a reproducible synthetic dataset that relates CGPA to placement package in LPA, splits it into training and test sets, fits the model, and prints predictions.
+
+### 2. Multiple linear regression
+
+`multi_linear_regression.py` fits a model with more than one input feature using the normal equation:
+
+```text
+beta = (X^T X)^-1 X^T y
+```
+
+The implementation adds a column of ones to `X` so that the first learned coefficient is the intercept. The remaining coefficients are stored in `coef_`.
+
+### 3. Gradient descent
+
+`gdregressor.py` contains the starting structure for a gradient-descent regressor. Gradient descent repeatedly updates the parameters in the direction that reduces the loss instead of solving the normal equation directly.
+
+This file is currently a work in progress and is not yet runnable. It is kept as the next implementation step for studying iterative optimization.
+
+## Project structure
+
+```text
 .
-├── simple_linear_regression.py   # SimpleLinearRegression class + demo script
+├── gdregressor.py                 # Gradient descent draft
+├── multi_linear_regression.py     # Multiple linear regression
+├── simple_linear_regression.py    # Single-feature OLS demo
 └── README.md
 ```
 
-## Usage
+## Requirements
+
+- Python 3.9 or newer
+- NumPy
+- pandas
+- scikit-learn, used only by the demo for `train_test_split`
+
+Install the dependencies with:
 
 ```bash
-pip install pandas numpy scikit-learn
+pip install numpy pandas scikit-learn
+```
+
+## Run the simple regression demo
+
+```bash
 python simple_linear_regression.py
 ```
 
-`scikit-learn` is used only for `train_test_split` — the regression model itself has zero dependency on `sklearn.linear_model`.
+The regression class itself does not use `sklearn.linear_model`. The only scikit-learn feature in the demo is the train/test split.
 
-## Implementation Notes
+## Example workflow
 
-- `fit()` computes `m` and `b` via a loop-based covariance/variance calculation (deliberately unvectorized for clarity — a NumPy-vectorized version is a natural next optimization)
-- `predict()` applies the fitted line to new inputs
-- Train/test split: 80/20, `random_state=42` for reproducibility
+The custom classes follow the familiar `fit()` and `predict()` pattern:
 
-## Possible Extensions
+```python
+import numpy as np
+from multi_linear_regression import MultiLinearRegression
 
-- Vectorize `fit()` using NumPy array operations instead of a Python loop
-- Add a residual plot to visualize error distribution
-- Extend to multiple linear regression (multi-feature `X`)
-- Compare against `sklearn.linear_model.LinearRegression` to confirm identical coefficients
+X = np.array([
+	[1.0, 2.0],
+	[2.0, 1.0],
+	[3.0, 4.0],
+])
+y = np.array([5.0, 6.0, 11.0])
 
----
+model = MultiLinearRegression()
+model.fit(X, y)
+predictions = model.predict(X)
+```
 
-Built as a foundational ML project — part of an ongoing self-directed AI/ML engineering roadmap.
+## Important assumptions and limitations
+
+Linear regression works best when:
+
+- The relationship between inputs and the target is approximately linear.
+- Observations are independent.
+- The input features are not perfectly collinear.
+- The variance of the errors is reasonably consistent.
+
+The normal-equation implementation uses a matrix inverse. That can fail when `X^T X` is singular or be numerically unstable for poorly conditioned data. A production implementation would generally use `np.linalg.solve()` or a pseudoinverse instead.
+
+The current classes also expect NumPy arrays with compatible shapes and do not yet include validation, scaling, metrics, or plotting utilities.
+
+## Planned improvements
+
+- Complete and test the gradient-descent implementation.
+- Add input-shape and fitted-model validation.
+- Replace explicit matrix inversion with a numerically safer solver.
+- Add MSE, RMSE, MAE, and R-squared metrics.
+- Add tests for exact data, noisy data, multiple features, and edge cases.
+- Compare the learned coefficients with scikit-learn as a verification step.
+
+This project is intended as a learning implementation: the equations are kept visible so the connection between the mathematics and the code remains clear.
